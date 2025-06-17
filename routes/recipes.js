@@ -55,6 +55,32 @@ router.post("/", async (req, res) => {
   }
 });
 
+// PUT /api/recipes/:id - Update an existing recipe
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, description, ingredients, instructions, image_url } = req.body;
+
+  try {
+    const result = await db.query(
+      `UPDATE recipes 
+       SET title = $1, description = $2, ingredients = $3, instructions = $4, image_url = $5 
+       WHERE id = $6 
+       RETURNING *`,
+      [title, description, ingredients, instructions, image_url, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Recipe not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error updating recipe:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 
 module.exports = router;
 
