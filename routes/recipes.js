@@ -31,6 +31,30 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// POST /api/recipes - Add a new recipe
+router.post("/", async (req, res) => {
+  const { user_id, title, description, ingredients, instructions, image_url } = req.body;
+
+  // Basic validation
+  if (!user_id || !title || !ingredients || !instructions) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [user_id, title, description, ingredients, instructions, image_url]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error inserting recipe:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 module.exports = router;
 
