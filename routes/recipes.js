@@ -14,6 +14,33 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Add this to your routes/recipes.js file *before* any :id routes
+router.get("/search", async (req, res) => {
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({ error: "Search query is required" });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT * FROM recipes 
+       WHERE LOWER(title) LIKE LOWER($1) OR EXISTS (
+         SELECT 1 FROM unnest(ingredients) AS ingredient 
+         WHERE LOWER(ingredient) LIKE LOWER($1)
+       )
+       ORDER BY created_at DESC`,
+      [`%${q}%`]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error searching recipes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
 // GET /api/recipes/mine - Get recipes created by the logged-in user
 router.get("/mine", verifyToken, async (req, res) => {
   const userId = req.user.userId;
