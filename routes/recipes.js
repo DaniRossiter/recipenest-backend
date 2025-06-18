@@ -59,11 +59,19 @@ router.post("/", verifyToken, async (req, res) => {
 
 
 // PUT /api/recipes/:id - Update an existing recipe
-router.put("/:id", async (req, res) => {
+router.put("/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
   const { title, description, ingredients, instructions, image_url } = req.body;
-  const user_id = req.user.userId;
+  const userId = req.user.userId;
 
   try {
+    // Check if recipe belongs to the logged-in user
+    const recipeCheck = await db.query("SELECT * FROM recipes WHERE id = $1 AND user_id = $2", [id, userId]);
+    if (recipeCheck.rows.length === 0) {
+      return res.status(403).json({ error: "You are not authorized to update this recipe" });
+    }
+
+    // Update the recipe
     const result = await db.query(
       `UPDATE recipes 
        SET title = $1, description = $2, ingredients = $3, instructions = $4, image_url = $5 
@@ -72,10 +80,6 @@ router.put("/:id", async (req, res) => {
       [title, description, ingredients, instructions, image_url, id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Recipe not found" });
-    }
-
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Error updating recipe:", err);
@@ -83,16 +87,21 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+
 // DELETE /api/recipes/:id - Delete a recipe
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.userId;
 
   try {
-    const result = await db.query("DELETE FROM recipes WHERE id = $1 RETURNING *", [id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Recipe not found" });
+    // Check if recipe belongs to the logged-in user
+    const recipeCheck = await db.query("SELECT * FROM recipes WHERE id = $1 AND user_id = $2", [id, userId]);
+    if (recipeCheck.rows.length === 0) {
+      return res.status(403).json({ error: "You are not authorized to delete this recipe" });
     }
+
+    // Delete the recipe
+    const result = await db.query("DELETE FROM recipes WHERE id = $1 RETURNING *", [id]);
 
     res.json({ message: "Recipe deleted successfully", deletedRecipe: result.rows[0] });
   } catch (err) {
@@ -100,6 +109,7 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 
