@@ -4,7 +4,6 @@ const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
@@ -31,6 +30,7 @@ router.post("/register", async (req, res) => {
       [username, email, password_hash]
     );
 
+    // Return new user's basic info
     res.status(201).json({ message: "User registered successfully", user: result.rows[0] });
   } catch (err) {
     console.error("Error registering user:", err);
@@ -56,20 +56,20 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    // Compare passwords
+    // Compare submitted password with hashed password in DB
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    // Create JWT
+    // Create JWT with user ID and email as payload
     const token = jwt.sign(
       { userId: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // Return token and basic user info
+    // Return token and user details (without password)
     res.json({
       message: "Login successful",
       token,

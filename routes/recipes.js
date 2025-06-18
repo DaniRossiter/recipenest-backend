@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const verifyToken = require("../middleware/authMiddleware");
 
 // GET /api/recipes - Get all recipes
 router.get("/", async (req, res) => {
@@ -32,8 +33,9 @@ router.get("/:id", async (req, res) => {
 });
 
 // POST /api/recipes - Add a new recipe
-router.post("/", async (req, res) => {
-  const { user_id, title, description, ingredients, instructions, image_url } = req.body;
+router.post("/", verifyToken, async (req, res) => {
+  const { title, description, ingredients, instructions, image_url } = req.body;
+  const user_id = req.user.userId; // Get from token
 
   // Basic validation
   if (!user_id || !title || !ingredients || !instructions) {
@@ -55,10 +57,11 @@ router.post("/", async (req, res) => {
   }
 });
 
+
 // PUT /api/recipes/:id - Update an existing recipe
 router.put("/:id", async (req, res) => {
-  const { id } = req.params;
   const { title, description, ingredients, instructions, image_url } = req.body;
+  const user_id = req.user.userId;
 
   try {
     const result = await db.query(
