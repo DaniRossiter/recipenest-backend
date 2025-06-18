@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 // Import routes
 const recipeRoutes = require("./routes/recipes");
+const authRoutes = require("./routes/auth");
 
 // Middleware
 app.use(cors());
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/auth", authRoutes);
 
 // Start server
 app.listen(PORT, () => {
