@@ -14,6 +14,23 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET /api/recipes/mine - Get recipes created by the logged-in user
+router.get("/mine", verifyToken, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM recipes WHERE user_id = $1 ORDER BY created_at DESC",
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching user recipes:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // GET /api/recipes/:id - Get a single recipe by ID
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
