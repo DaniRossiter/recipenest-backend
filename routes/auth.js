@@ -37,7 +37,7 @@ router.post("/register", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // ✅ Return token and user info
+    // Return token and user info
     res.status(201).json({
       message: "User registered successfully",
       token,
@@ -49,6 +49,12 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// Add test login route to confirm connection
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Login request received with:", req.body);
+
+  res.status(200).json({ message: "Login route reached" });
+});
 
 module.exports = router;
-

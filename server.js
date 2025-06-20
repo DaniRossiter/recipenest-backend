@@ -4,8 +4,14 @@ require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -19,4 +25,4 @@ app.get("/", (req, res) => {
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/auth", authRoutes);
 
-module.exports = app; // Export for testing
+module.exports = app;
