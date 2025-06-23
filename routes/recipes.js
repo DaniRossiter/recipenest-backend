@@ -78,6 +78,7 @@ router.get("/:id", async (req, res) => {
 // POST /api/recipes
 router.post("/", verifyToken, async (req, res) => {
   const { title, description, ingredients, instructions, image_url, servings } = req.body;
+  const servingsInt = servings === "" ? null : parseInt(servings, 10);
   const user_id = req.user.userId;
 
   if (!user_id || !title || !ingredients || !instructions) {
@@ -89,7 +90,7 @@ router.post("/", verifyToken, async (req, res) => {
       `INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url, servings)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [user_id, title, description, ingredients, instructions, image_url, servings]
+      [user_id, title, description, ingredients, instructions, image_url, servingsInt]
     );
 
     res.status(201).json(result.rows[0]);
@@ -103,6 +104,7 @@ router.post("/", verifyToken, async (req, res) => {
 router.put("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { title, description, ingredients, instructions, imageUrl, servings } = req.body;
+  const servingsInt = servings === "" ? null : parseInt(servings, 10);
   const image_url = imageUrl;
   const userId = req.user.userId;
 
@@ -121,7 +123,7 @@ router.put("/:id", verifyToken, async (req, res) => {
        SET title = $1, description = $2, ingredients = $3, instructions = $4, image_url = $5, servings = $6
        WHERE id = $7
        RETURNING *`,
-      [title, description, ingredients, instructions, image_url, servings, id]
+      [title, description, ingredients, instructions, image_url, servingsInt, id]
     );
 
     res.json(result.rows[0]);
