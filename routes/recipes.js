@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Add this to your routes/recipes.js file *before* any :id routes
+// GET /api/recipes/search
 router.get("/search", async (req, res) => {
   const { q } = req.query;
 
@@ -40,8 +40,7 @@ router.get("/search", async (req, res) => {
   }
 });
 
-
-// GET /api/recipes/mine - Get recipes created by the logged-in user
+// GET /api/recipes/mine
 router.get("/mine", verifyToken, async (req, res) => {
   const userId = req.user.userId;
 
@@ -58,7 +57,7 @@ router.get("/mine", verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/recipes/:id - Get a single recipe by ID
+// GET /api/recipes/:id
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -76,22 +75,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST /api/recipes - Add a new recipe
+// POST /api/recipes
 router.post("/", verifyToken, async (req, res) => {
-  const { title, description, ingredients, instructions, image_url } = req.body;
-  const user_id = req.user.userId; // Get from token
+  const { title, description, ingredients, instructions, image_url, servings } = req.body;
+  const user_id = req.user.userId;
 
-  // Basic validation
   if (!user_id || !title || !ingredients || !instructions) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   try {
     const result = await db.query(
-      `INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO recipes (user_id, title, description, ingredients, instructions, image_url, servings)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [user_id, title, description, ingredients, instructions, image_url]
+      [user_id, title, description, ingredients, instructions, image_url, servings]
     );
 
     res.status(201).json(result.rows[0]);
@@ -101,28 +99,29 @@ router.post("/", verifyToken, async (req, res) => {
   }
 });
 
-
-// PUT /api/recipes/:id - Update an existing recipe
+// PUT /api/recipes/:id
 router.put("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { title, description, ingredients, instructions, imageUrl } = req.body;
-  const image_url = imageUrl; 
+  const { title, description, ingredients, instructions, imageUrl, servings } = req.body;
+  const image_url = imageUrl;
   const userId = req.user.userId;
 
   try {
-    // Check if recipe belongs to the logged-in user
-    const recipeCheck = await db.query("SELECT * FROM recipes WHERE id = $1 AND user_id = $2", [id, userId]);
+    const recipeCheck = await db.query(
+      "SELECT * FROM recipes WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
     if (recipeCheck.rows.length === 0) {
       return res.status(403).json({ error: "You are not authorized to update this recipe" });
     }
 
-    // Update the recipe
     const result = await db.query(
       `UPDATE recipes 
-       SET title = $1, description = $2, ingredients = $3, instructions = $4, image_url = $5 
-       WHERE id = $6 
+       SET title = $1, description = $2, ingredients = $3, instructions = $4, image_url = $5, servings = $6
+       WHERE id = $7
        RETURNING *`,
-      [title, description, ingredients, instructions, image_url, id]
+      [title, description, ingredients, instructions, image_url, servings, id]
     );
 
     res.json(result.rows[0]);
@@ -132,20 +131,21 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 });
 
-
-// DELETE /api/recipes/:id - Delete a recipe
+// DELETE /api/recipes/:id
 router.delete("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
 
   try {
-    // Check if recipe belongs to the logged-in user
-    const recipeCheck = await db.query("SELECT * FROM recipes WHERE id = $1 AND user_id = $2", [id, userId]);
+    const recipeCheck = await db.query(
+      "SELECT * FROM recipes WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
     if (recipeCheck.rows.length === 0) {
       return res.status(403).json({ error: "You are not authorized to delete this recipe" });
     }
 
-    // Delete the recipe
     const result = await db.query("DELETE FROM recipes WHERE id = $1 RETURNING *", [id]);
 
     res.json({ message: "Recipe deleted successfully", deletedRecipe: result.rows[0] });
@@ -155,8 +155,6 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
-
-
-
 module.exports = router;
+
 
