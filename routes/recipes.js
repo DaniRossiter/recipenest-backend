@@ -105,7 +105,8 @@ router.post("/", verifyToken, async (req, res) => {
 // PUT /api/recipes/:id - Update an existing recipe
 router.put("/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { title, description, ingredients, instructions, image_url } = req.body;
+  const { title, description, ingredients, instructions, imageUrl } = req.body;
+  const image_url = imageUrl; 
   const userId = req.user.userId;
 
   try {
