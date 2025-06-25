@@ -13,9 +13,16 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    const existingUser = await db.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (existingUser.rows.length > 0) {
+    // Check if email already exists
+    const existingEmail = await db.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (existingEmail.rows.length > 0) {
       return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Check if username already exists
+    const existingUsername = await db.query("SELECT * FROM users WHERE username = $1", [username]);
+    if (existingUsername.rows.length > 0) {
+      return res.status(400).json({ error: "Username already taken" });
     }
 
     const salt = await bcrypt.genSalt(10);
