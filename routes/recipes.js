@@ -81,8 +81,16 @@ router.post("/", verifyToken, async (req, res) => {
   const servingsInt = servings === "" ? null : parseInt(servings, 10);
   const user_id = req.user.userId;
 
-  if (!user_id || !title || !ingredients || !instructions) {
-    return res.status(400).json({ error: "Missing required fields" });
+  if (
+    !user_id ||
+    !title?.trim() ||
+    !description?.trim() ||
+    !Array.isArray(ingredients) || ingredients.length === 0 ||
+    !Array.isArray(instructions) || instructions.length === 0
+  ) {
+    return res.status(400).json({
+      error: "All fields (title, description, ingredients, instructions) are required."
+    });
   }
 
   try {
@@ -99,6 +107,7 @@ router.post("/", verifyToken, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // PUT /api/recipes/:id
 router.put("/:id", verifyToken, async (req, res) => {
