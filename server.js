@@ -72,7 +72,10 @@ pool.query(`
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173", // Replace with frontend Render URL after deployment
+  origin: [
+    "http://localhost:5173", // Local dev
+    "https://recipenest-frontend.onrender.com" // Deployed frontend
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 };
