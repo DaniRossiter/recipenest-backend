@@ -14,9 +14,10 @@ pool.query(`
     IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') THEN
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
+        username VARCHAR(255),
         email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        username VARCHAR(255)
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     ELSIF NOT EXISTS (
       SELECT FROM information_schema.columns 
@@ -34,7 +35,8 @@ pool.query(`
         description TEXT,
         ingredients TEXT[],
         instructions TEXT[],
-        imageUrl TEXT,
+        image_url TEXT,
+        servings INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     ELSIF NOT EXISTS (
@@ -53,7 +55,7 @@ pool.query(`
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: "http://localhost:5173", // change to frontend Render URL after deployment
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 };
