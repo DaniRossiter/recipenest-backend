@@ -24,15 +24,29 @@ pool.query(`
       description TEXT,
       ingredients TEXT[],
       instructions TEXT[],
-      imageUrl TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      imageUrl TEXT
     );
   `);
-
 }).then(() => {
   console.log("recipes table ready");
+
+  // Add created_at column if it doesn't exist
+  return pool.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'recipes' AND column_name = 'created_at'
+      ) THEN
+        ALTER TABLE recipes ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      END IF;
+    END
+    $$;
+  `);
+}).then(() => {
+  console.log("created_at column added (if missing)");
 }).catch(err => {
-  console.error("Error creating tables:", err);
+  console.error("Error setting up database tables:", err);
 });
 
 // CORS configuration
