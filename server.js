@@ -8,29 +8,45 @@ const app = express();
 
 // Auto-create tables in the correct order
 pool.query(`
-  CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL
-  );
-`).then(() => {
-  console.log("users table ready");
+  DO $$
+  BEGIN
+    -- USERS TABLE
+    IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users') THEN
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        username VARCHAR(255)
+      );
+    ELSIF NOT EXISTS (
+      SELECT FROM information_schema.columns 
+      WHERE table_name = 'users' AND column_name = 'username'
+    ) THEN
+      ALTER TABLE users ADD COLUMN username VARCHAR(255);
+    END IF;
 
-  return pool.query(`
-    CREATE TABLE IF NOT EXISTS recipes (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      title TEXT NOT NULL,
-      description TEXT,
-      ingredients TEXT[],
-      instructions TEXT[],
-      imageUrl TEXT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-}).then(() => {
-  console.log("recipes table ready");
+    -- RECIPES TABLE
+    IF NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'recipes') THEN
+      CREATE TABLE recipes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        ingredients TEXT[],
+        instructions TEXT[],
+        imageUrl TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    ELSIF NOT EXISTS (
+      SELECT FROM information_schema.columns 
+      WHERE table_name = 'recipes' AND column_name = 'created_at'
+    ) THEN
+      ALTER TABLE recipes ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+  END
+  $$;
+`).then(() => {
+  console.log("Tables verified and updated if needed");
 }).catch(err => {
   console.error("Error setting up database tables:", err);
 });
