@@ -24,9 +24,11 @@ pool.query(`
       description TEXT,
       ingredients TEXT[],
       instructions TEXT[],
-      imageUrl TEXT
+      imageUrl TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
 }).then(() => {
   console.log("recipes table ready");
 }).catch(err => {
