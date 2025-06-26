@@ -6,7 +6,7 @@ const pool = require("./db"); // Import database connection
 
 const app = express();
 
-// Auto-create tables if they don't exist
+// Auto-create tables in the correct order
 pool.query(`
   CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -15,24 +15,22 @@ pool.query(`
   );
 `).then(() => {
   console.log("users table ready");
-}).catch(err => {
-  console.error("Error creating users table:", err);
-});
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS recipes (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    description TEXT,
-    ingredients TEXT[],
-    instructions TEXT[],
-    imageUrl TEXT
-  );
-`).then(() => {
+  return pool.query(`
+    CREATE TABLE IF NOT EXISTS recipes (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT,
+      ingredients TEXT[],
+      instructions TEXT[],
+      imageUrl TEXT
+    );
+  `);
+}).then(() => {
   console.log("recipes table ready");
 }).catch(err => {
-  console.error("Error creating recipes table:", err);
+  console.error("Error creating tables:", err);
 });
 
 // CORS configuration
