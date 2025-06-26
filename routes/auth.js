@@ -25,14 +25,17 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Username already taken" });
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Insert new user
     const result = await db.query(
-      "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email",
-      [username, email, password_hash]
+      "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email",
+      [username, email, hashedPassword]
     );
 
+    // Generate JWT
     const token = jwt.sign(
       { userId: result.rows[0].id, email: result.rows[0].email },
       process.env.JWT_SECRET,
@@ -54,7 +57,6 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // Basic validation
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
@@ -67,7 +69,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
