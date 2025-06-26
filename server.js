@@ -39,11 +39,28 @@ pool.query(`
         servings INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-    ELSIF NOT EXISTS (
-      SELECT FROM information_schema.columns 
-      WHERE table_name = 'recipes' AND column_name = 'created_at'
-    ) THEN
-      ALTER TABLE recipes ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+    ELSE
+      -- Ensure missing columns are added one by one
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'recipes' AND column_name = 'image_url'
+      ) THEN
+        ALTER TABLE recipes ADD COLUMN image_url TEXT;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'recipes' AND column_name = 'servings'
+      ) THEN
+        ALTER TABLE recipes ADD COLUMN servings INTEGER;
+      END IF;
+
+      IF NOT EXISTS (
+        SELECT FROM information_schema.columns 
+        WHERE table_name = 'recipes' AND column_name = 'created_at'
+      ) THEN
+        ALTER TABLE recipes ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      END IF;
     END IF;
   END
   $$;
@@ -55,7 +72,7 @@ pool.query(`
 
 // CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173", // change to frontend Render URL after deployment
+  origin: "http://localhost:5173", // Replace with frontend Render URL after deployment
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 };
